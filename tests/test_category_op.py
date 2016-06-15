@@ -3,7 +3,7 @@ from nose.tools import assert_equals
 
 from regraph.library.data_structures import (TypedGraph,
                                              Homomorphism)
-from regraph.library.category_op import (pullback, final_PBC)
+from regraph.library.category_op import (pullback, pushout, final_PBC)
 
 
 def assert_edges_undir(edges1, edges2):
@@ -98,3 +98,13 @@ class TestCategoryOp:
         assert_edges_undir(C.edges(), self.homAC.target_.edges())
         assert_equals(homAC.mapping_, self.homAC.mapping_)
         assert_equals(homCD.mapping_, self.homCD.mapping_)
+
+    def test_pushout(self):
+        D, homBD, homCD = pushout(self.homAB, self.homAC)
+        assert_equals(type(D), TypedGraph)
+
+        assert_equals(len(D.nodes()),
+                      len(self.homBD.target_.nodes()))
+
+        assert_equals(len(D.edges()),
+                      len(self.homBD.target_.edges()))

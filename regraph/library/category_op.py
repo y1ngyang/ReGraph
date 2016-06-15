@@ -180,54 +180,110 @@ def final_PBC(h1, h2):
     return (res_graph, res_h1, res_h2)
 
 
-def pushout(hom):
-    nodes = set([n for n in hom.target_.nodes() if n not in hom.mapping_.values()])
+def pushout(h1, h2):
+    if h1.source_ != h2.source_:
+        raise ValueError(
+            "Domain of homomorphism 1 and domain of homomorphism 2 " +
+            "don't match, can't do pushout"
+        )
 
-    node_attrs = {}
-    for node in hom.source_.nodes():
-        if node not in node_attrs.keys():
-            node_attrs.update({node: {}})
+    hom1 = {}
+    hom2 = {}
 
-        mapped_node = hom.mapping_[node]
-        mapped_attrs = hom.target_.node[mapped_node].attrs_
+    if type(h1.target_) == TypedGraph:
+        res_graph = TypedGraph()
+    else:
+        res_graph = TypedDiGraph()
 
-        attrs = hom.source_.node[node].attrs_
-        if mapped_attrs is not None and attrs is not None:
-            for key, value in mapped_attrs.items():
-                if key not in attrs.keys():
-                    node_attrs[node].update({key: value})
-                else:
-                    node_attrs[node].update(
-                        {key: set([el for el in value if el not in attrs[key]])})
+    for node in h1.source_.nodes():
+        res_graph.add_node(
+            str(h1.mapping_[node]) + "_" + str(h2.mapping_[node]),
+            h1.source_.node[node].type_,
+            merge_attributes(
+                h1.target_.node[h1.mapping_[node]].attrs_,
+                h2.target_.node[h2.mapping_[node]].attrs_,
+                "union"
+            )
+        )
+        hom1[h1.mapping_[node]] =\
+            str(h1.mapping_[node]) + "_" + str(h2.mapping_[node])
+        hom2[h2.mapping_[node]] =\
+            str(h1.mapping_[node]) + "_" + str(h2.mapping_[node])
 
-    edges = dict()
-    edge_attrs = {}
+    for s, t in h1.source_.edges():
+        res_graph.add_edge(
+            str(h1.mapping_[s]) + "_" + str(h2.mapping_[s]),
+            str(h1.mapping_[t]) + "_" + str(h2.mapping_[t]),
+            merge_attributes(
+                h1.target_.get_edge(h1.mapping_[s], h1.mapping_[t]),
+                h2.target_.get_edge(h2.mapping_[s], h2.mapping_[t]),
+                "union"
+            )
+        )
 
-    for edge in hom.target_.edges():
-        sources = keys_by_value(hom.mapping_, edge[0])
-        targets = keys_by_value(hom.mapping_, edge[1])
-        if len(sources) == 0 or len(targets) == 0:
-            edges[(edge[0], edge[1])] = hom.target_.edge[edge[0]][edge[1]]
-            continue
-        for s in sources:
-            for t in targets:
-                if (s, t) not in hom.source_.edges():
-                    edges[(edge[0], edge[1])] = hom.target_.edge[edge[0]][edge[1]]
+    for node in h1.target_.nodes():
+        if node not in h1.mapping_.values():
+            res_graph.add_node(
+                str(node) + "_",
+                h1.target_.node[node].type_,
+                h1.target_.node[node].attrs_
+            )
+            hom1[node] = str(node) + "_"
 
-    for edge in hom.source_.edges():
-        if edge not in edge_attrs.keys():
-            edge_attrs.update({edge: {}})
+    for node in h2.target_.nodes():
+        if node not in h2.mapping_.values():
+            res_graph.add_node(
+                str(node) + "_",
+                h2.target_.node[node].type_,
+                h2.target_.node[node].attrs_
+            )
+            hom2[node] = str(node) + "_"
 
-        mapped_edge = (hom.mapping_[edge[0]], hom.mapping_[edge[1]])
-        mapped_attrs = hom.target_.edge[mapped_edge[0]][mapped_edge[1]]
+    for s, t in h1.target_.edges():
+        if s not in h1.mapping_.values() or t not in h1.mapping_.values():
+            res_graph.add_edge(
+                hom1[s],
+                hom1[t],
+                h1.target_.get_edge(s, t)
+            )
+        if res_graph.is_directed():
+            if (hom1[s], hom1[t]) not in res_graph.edges():
+                res_graph.add_edge(
+                    hom1[s],
+                    hom1[t],
+                    h1.target_.get_edge(s, t)
+                )
+        else:
+            if (hom1[s], hom1[t]) not in res_graph.edges() and (hom1[t], hom1[s]) not in res_graph.edges():
+                res_graph.add_edge(
+                    hom1[s],
+                    hom1[t],
+                    h1.target_.get_edge(s, t)
+                )
 
-        attrs = hom.source_.edge[edge[0]][edge[1]]
+    for s, t in h2.target_.edges():
+        if s not in h2.mapping_.values() or t not in h2.mapping_.values():
+            res_graph.add_edge(
+                hom2[s],
+                hom2[t],
+                h2.target_.get_edge(s, t)
+            )
+        if res_graph.is_directed():
+            if (hom2[s], hom2[t]) not in res_graph.edges():
+                res_graph.add_edge(
+                    hom2[s],
+                    hom2[t],
+                    h2.target_.get_edge(s, t)
+                )
+        else:
+            if (hom2[s], hom2[t]) not in res_graph.edges() and (hom2[t], hom2[s]) not in res_graph.edges():
+                res_graph.add_edge(
+                    hom2[s],
+                    hom2[t],
+                    h2.target_.get_edge(s, t)
+                )
 
-        for key, value in mapped_attrs.items():
-            if key not in attrs.keys():
-                edge_attrs[edge].update({key: value})
-            else:
-                edge_attrs[edge].update(
-                    {key: set([el for el in value
-                               if el not in attrs[key]])})
-    return (nodes, edges, node_attrs, edge_attrs)
+    res_h1 = Homomorphism(h1.target_, res_graph, hom1)
+    res_h2 = Homomorphism(h2.target_, res_graph, hom2)
+
+    return (res_graph, res_h1, res_h2)
