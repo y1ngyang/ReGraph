@@ -269,7 +269,7 @@ def clone_node(graph, node, name=None):
     return new_node
 
 
-def add_node(graph, node_type, name=None, attrs={}):
+def add_node(graph, node_type, name=None, attrs=None):
     """Add new node to the graph."""
     if graph.metamodel_ is not None:
         if node_type not in graph.metamodel_.nodes():
@@ -300,7 +300,7 @@ def remove_node(graph, node):
     return
 
 
-def add_edge(graph, source, target, attrs={}):
+def add_edge(graph, source, target, attrs=None):
     """Add edge to the graph."""
     if graph.is_directed():
         # check restrictions of metamodel
