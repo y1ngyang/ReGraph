@@ -240,7 +240,10 @@ class TypedGraph(nx.Graph):
         nx.Graph.add_edges_from(self, edge_list, attrs)
 
     def get_edge(self, source, target):
-        return self.edge[source][target]
+        if (source, target) in self.edges():
+            return self.edge[source][target]
+        if (target, source) in self.edges():
+            return self.edge[target][source]
 
     def set_edge(self, u, v, attrs):
         if (not (u, v) in self.edges()) and (not (v,u) in self.edges()):
