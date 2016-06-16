@@ -226,7 +226,38 @@ class TypedDiGraph(nx.DiGraph):
                 filename)
 
     def export(self, filename):
-        pass
+        j_data = {"edges": [], "nodes": []}
+        # dump nodes
+        for node in self.nodes():
+            node_data = {}
+            node_data["id"] = node
+            node_data["type"] = self.node[node].type_
+            if self.node[node].attrs_ is not None:
+                attrs = {}
+                for key, value in self.node[node].attrs_.items():
+                    if type(value) == set:
+                        attrs[key] = list(value)
+                    else:
+                        attrs[key] = value
+                node_data["attrs"] = attrs
+            j_data["nodes"].append(node_data)
+        # dump edges
+        for s, t in self.edges():
+            edge_data = {}
+            edge_data["from"] = s
+            edge_data["to"] = t
+            if self.edge[s][t] is not None:
+                attrs = {}
+                for key, value in self.edge[s][t].items():
+                    if type(value) == set:
+                        attrs[key] = list(value)
+                    else:
+                        attrs[key] = value
+                edge_data["attrs"] = attrs
+            j_data["edges"].append(edge_data)
+
+        with open(filename, 'w') as f:
+            json.dump(j_data, f)
 
 
 class TypedGraph(nx.Graph):
@@ -432,7 +463,38 @@ class TypedGraph(nx.Graph):
                 filename)
 
     def export(self, filename):
-        pass
+        j_data = {"edges": [], "nodes": []}
+        # dump nodes
+        for node in self.nodes():
+            node_data = {}
+            node_data["id"] = node
+            node_data["type"] = self.node[node].type_
+            if self.node[node].attrs_ is not None:
+                attrs = {}
+                for key, value in self.node[node].attrs_.items():
+                    if type(value) == set:
+                        attrs[key] = list(value)
+                    else:
+                        attrs[key] = value
+                node_data["attrs"] = attrs
+            j_data["nodes"].append(node_data)
+        # dump edges
+        for s, t in self.edges():
+            edge_data = {}
+            edge_data["from"] = s
+            edge_data["to"] = t
+            if self.edge[s][t] is not None:
+                attrs = {}
+                for key, value in self.edge[s][t].items():
+                    if type(value) == set:
+                        attrs[key] = list(value)
+                    else:
+                        attrs[key] = value
+                edge_data["attrs"] = attrs
+            j_data["edges"].append(edge_data)
+
+        with open(filename, 'w') as f:
+            json.dump(j_data, f)
 
 
 def is_valid_homomorphism(source, target, dictionary):

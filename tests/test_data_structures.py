@@ -279,3 +279,18 @@ class TestDataStructures(object):
         assert_equals(a.node[1].attrs_, {"u": {1}, "k": {33}})
         assert_equals(a.node[2].attrs_, None)
         assert_equals(a.node[3].attrs_, {"x": {33, 55, 66}})
+
+    def test_load_export(self):
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        filename = os.path.join(__location__, "graph_example.json")
+        a = TypedGraph()
+        a.load(filename)
+        out_filename = os.path.join(__location__, "output_graph.json")
+        a.export(out_filename)
+        b = TypedGraph()
+        b.load(out_filename)
+
+        assert_equals(a.nodes(), b.nodes())
+        assert_edges_undir(a.edges(), b.edges())
+        assert_equals(a.node[3].attrs_, b.node[3].attrs_)
