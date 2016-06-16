@@ -5,6 +5,9 @@ import networkx as nx
 from regraph.library.utils import (is_subdict, keys_by_value)
 from regraph.library.primitives import (normalize_attrs)
 
+import json
+import os.path
+
 
 class TypedNode:
     """Define the datastructure for typed node."""
@@ -50,8 +53,17 @@ class TypedDiGraph(nx.DiGraph):
             raise ValueError("Node %s already exists!" % node_id)
 
     def add_nodes_from(self, node_list):
-        for node_id, node_type in node_list:
-            self.add_node(node_id, node_type)
+        for node_def in node_list:
+            if len(node_def) == 2:
+                node_id, node_type = node_def
+                self.add_node(node_id, node_type)
+            elif len(node_def) == 3:
+                node_id, node_type, attrs = node_def
+                self.add_node(node_id, node_type, attrs)
+            else:
+                raise ValueError(
+                    "Node should be defined by 2-tuple or 3-tuple")
+
 
     def add_edge(self, s, t, attrs=None, **attr):
         # set up attribute dict (from Networkx to preserve the signature)
@@ -155,6 +167,67 @@ class TypedDiGraph(nx.DiGraph):
             g.set_edge(s, t, attributes[(s, t)])
         return g
 
+    def load(self, filename):
+        if os.path.isfile(filename):
+            with open(filename, "r+") as f:
+                j_data = json.loads(f.read())
+                # start graph init
+                loaded_nodes = []
+                if "nodes" in j_data.keys():
+                    j_nodes = j_data["nodes"]
+                    for node in j_nodes:
+                        if "id" in node.keys():
+                            node_id = node["id"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: node id is not specified!")
+                        if "type" in node.keys():
+                            node_type = node["type"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: node type is not specified!")
+                        attrs = None
+                        if "attrs" in node.keys():
+                            attrs = node["attrs"]
+                        loaded_nodes.append((node_id, node_type, attrs))
+                else:
+                    raise ValueError(
+                        "Error loading graph: no nodes specified!")
+                loaded_edges = []
+                if "edges" in j_data.keys():
+                    j_edges = j_data["edges"]
+                    for edge in j_edges:
+                        if "from" in edge.keys():
+                            s_node = edge["from"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: edge source is not specified!")
+                        if "to" in edge.keys():
+                            t_node = edge["to"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: edge target is not specified!")
+                        if "attrs" in edge.keys():
+                            attrs = edge["attrs"]
+                            if type(attrs) == list:
+                                attrs = set(attrs)
+                            loaded_edges.append((s_node, t_node, attrs))
+                        else:
+                            loaded_edges.append((s_node, t_node))
+                else:
+                    raise ValueError(
+                        "Error loading graph: no edges specified!")
+                nx.DiGraph.clear(self)
+                self.add_nodes_from(loaded_nodes)
+                self.add_edges_from(loaded_edges)
+        else:
+            raise ValueError(
+                "Error loading graph: file '%s' does not exist!" %
+                filename)
+
+    def export(self, filename):
+        pass
+
 
 class TypedGraph(nx.Graph):
     """Define simple typed undirected graph."""
@@ -177,8 +250,16 @@ class TypedGraph(nx.Graph):
             raise ValueError("Node %s already exists!" % node_id)
 
     def add_nodes_from(self, node_list):
-        for node_id, node_type in node_list:
-            self.add_node(node_id, node_type)
+        for node_def in node_list:
+            if len(node_def) == 2:
+                node_id, node_type = node_def
+                self.add_node(node_id, node_type)
+            elif len(node_def) == 3:
+                node_id, node_type, attrs = node_def
+                self.add_node(node_id, node_type, attrs)
+            else:
+                raise ValueError(
+                    "Node should be defined by 2-tuple or 3-tuple")
 
     def add_edge(self, s, t, attrs=None, **attr):
         # set up attribute dict (from Networkx to preserve the signature)
@@ -291,6 +372,67 @@ class TypedGraph(nx.Graph):
         for s, t in g.edges():
             g.set_edge(s, t, attributes[(s, t)])
         return g
+
+    def load(self, filename):
+        if os.path.isfile(filename):
+            with open(filename, "r+") as f:
+                j_data = json.loads(f.read())
+                # start graph init
+                loaded_nodes = []
+                if "nodes" in j_data.keys():
+                    j_nodes = j_data["nodes"]
+                    for node in j_nodes:
+                        if "id" in node.keys():
+                            node_id = node["id"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: node id is not specified!")
+                        if "type" in node.keys():
+                            node_type = node["type"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: node type is not specified!")
+                        attrs = None
+                        if "attrs" in node.keys():
+                            attrs = node["attrs"]
+                        loaded_nodes.append((node_id, node_type, attrs))
+                else:
+                    raise ValueError(
+                        "Error loading graph: no nodes specified!")
+                loaded_edges = []
+                if "edges" in j_data.keys():
+                    j_edges = j_data["edges"]
+                    for edge in j_edges:
+                        if "from" in edge.keys():
+                            s_node = edge["from"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: edge source is not specified!")
+                        if "to" in edge.keys():
+                            t_node = edge["to"]
+                        else:
+                            raise ValueError(
+                                "Error loading graph: edge target is not specified!")
+                        if "attrs" in edge.keys():
+                            attrs = edge["attrs"]
+                            if type(attrs) == list:
+                                attrs = set(attrs)
+                            loaded_edges.append((s_node, t_node, attrs))
+                        else:
+                            loaded_edges.append((s_node, t_node))
+                else:
+                    raise ValueError(
+                        "Error loading graph: no edges specified!")
+                nx.Graph.clear(self)
+                self.add_nodes_from(loaded_nodes)
+                self.add_edges_from(loaded_edges)
+        else:
+            raise ValueError(
+                "Error loading graph: file '%s' does not exist!" %
+                filename)
+
+    def export(self, filename):
+        pass
 
 
 def is_valid_homomorphism(source, target, dictionary):
