@@ -88,6 +88,7 @@ def final_PBC(h1, h2):
         B_node = keys_by_value(h2.mapping_, node)
         if len(B_node) > 0:
             mapped_A_nodes = keys_by_value(h1.mapping_, B_node[0])
+            print(mapped_A_nodes)
             for A_node in mapped_A_nodes:
                 res_graph.add_node(
                     str(A_node) + "_" + str(node),
@@ -116,7 +117,7 @@ def final_PBC(h1, h2):
             for A_s in mapped_A_ss:
                 for A_t in mapped_A_ts:
                     if res_graph.is_directed():
-                        if (A_s, A_t) not in h1.source_.edges():
+                        if hom1[A_s] == hom1[A_t] and (A_s, A_t) not in h1.source_.edges():
                             res_graph.add_edge(
                                 hom1[A_s],
                                 hom1[A_t],
@@ -137,7 +138,7 @@ def final_PBC(h1, h2):
                                 )
                             )
                     else:
-                        if (A_s, A_t) not in h1.source_.edges() and (A_t, A_s) not in h1.source_.edges():
+                        if hom1[A_s] == hom1[A_t] and (A_s, A_t) not in h1.source_.edges() and (A_t, A_s) not in h1.source_.edges():
                             res_graph.add_edge(
                                 hom1[A_s],
                                 hom1[A_t],
@@ -145,6 +146,7 @@ def final_PBC(h1, h2):
                                     h2.mapping_[h1.mapping_[A_s]],
                                     h2.mapping_[h1.mapping_[A_t]])
                             )
+                            pass
                         else:
                             res_graph.add_edge(
                                 hom1[A_s],
