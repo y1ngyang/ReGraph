@@ -92,7 +92,6 @@ class TestCategoryOp:
 
     def test_final_PBC(self):
         C, homAC, homCD = final_PBC(self.homAB, self.homBD)
-
         assert_equals(type(C), TypedGraph)
         assert_equals(set(C.nodes()), set(self.homAC.target_.nodes()))
         assert_edges_undir(C.edges(), self.homAC.target_.edges())

@@ -95,11 +95,11 @@ class TestRewrites(object):
         self.rw_.transform_instance(
             self.instances_[0],
             """delete_node 6.\n"""
-            """merge [1, 5] method union as merge_1.\n"""
-            """merge [4, 7] as merge_2.\n"""
-            """add_edge merge_1 merge_2.\n"""
-            """clone merge_1 as clone_1.\n"""
-            """clone 3 as clone_2.""")
+            """merge [1, 5] method union as 'merge_1'.\n"""
+            """merge [4, 7] as 'merge_2'.\n"""
+            """add_edge 'merge_1' 'merge_2'.\n"""
+            """clone 'merge_1' as 'clone_1'.\n"""
+            """clone 3 as 'clone_2'.""")
 
     def test_clonning_merging_sequence(self):
         __location__ = os.path.realpath(
@@ -297,18 +297,18 @@ class TestRewrites(object):
         h1, h2 = rw.generate_rule(
             LHS,
             """delete_node 1.
-            clone 2 as clone.
-            delete_node_attrs clone {u: 0}.
+            clone 2 as 'clone'.
+            delete_node_attrs 'clone' {'u': 0}.
             delete_edge 2 3.
-            delete_edge_attrs clone 3 {k: {1}}.
-            update_edge_attrs clone 3 {t: 333}.
-            update_node_attrs 2 {u: {12, 13}}.
-            merge [clone, 3] as merged.
-            add_node_attrs merged {m: 1}.
-            add_node new_node type region.
-            add_node_attrs new_node {x: 1}.
-            add_edge new_node merged.
-            add_edge_attrs merged new_node {j: 33}."""
+            delete_edge_attrs 'clone' 3 {'k': {1}}.
+            update_edge_attrs 'clone' 3 {'t': 333}.
+            update_node_attrs 2 {'u': {12, 13}}.
+            merge ['clone', 3] as 'merged'.
+            add_node_attrs 'merged' {'m': 1}.
+            add_node 'new_node' type 'region'.
+            add_node_attrs 'new_node' {'x': 1}.
+            add_edge 'new_node' 'merged'.
+            add_edge_attrs 'merged' 'new_node' {'j': 33}."""
         )
 
         RHS_instance = rw.apply_rule(instances[0], h1, h2)
