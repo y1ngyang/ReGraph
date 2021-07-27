@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "matplotlib",
-        "networkx==1.11",
+        "networkx==2.6.2",
         "numpy",
         "pyparsing",
         "lrparsing",
